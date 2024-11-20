@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { caFile, keyFile, certFile } from'./certs.mjs';
 
-const xrfKey = "abcdefghijklmnop";
+const xrfKey = process.env.QLIK_XRFKEY || "abcdefghijklmnop";
 
 const httpsAgent = new https.Agent({
   rejectUnauthorized: false,
