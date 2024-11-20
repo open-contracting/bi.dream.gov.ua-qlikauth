@@ -37,10 +37,9 @@ async function main() {
             saveUninitialized: false,
             secret: process.env.SESSION_SECRET,
             unset: "destroy",
-            cookie: {
-                secure: false,
-                httpOnly: true, // if true prevent client side JS from reading the cookie
-            },
+            // Default is { path: '/', httpOnly: true, secure: false, maxAge: null }
+            // https://www.npmjs.com/package/express-session
+            cookie: { secure: true },
         }),
     );
     app.get("/ping", (req, res) => res.send("pong"));
