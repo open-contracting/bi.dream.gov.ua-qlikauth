@@ -2,12 +2,10 @@ import express from 'express';
 import passport from 'passport';
 import { redirectToQlik, userFromRequest, webLoginSuccessHandler } from './utils.mjs';
 import { getUserSessions, deleteUserAndSessions } from '../qlik-utils.mjs';
-import useFacebookStrategy from '../auth-strategy/facebook.mjs';
 import useGoogleStrategy from '../auth-strategy/google.mjs';
 
 const WEB_LOGIN = 'web_login';
 const MODULE_LOGIN = 'module_login';
-const FBAuthCallback = `${process.env.DOMAIN}/api/auth/facebook_auth_callback`;
 const GOOGAuthCallback = `${process.env.DOMAIN}/api/auth/google_auth_callback`;
 const AUTH_FAILED_URL = `${process.env.DOMAIN}/api/auth/failed`;
 //const AUTH_SUCCESS_URL = '/api/auth/login_success';
@@ -66,7 +64,7 @@ authRouter.get('/user/:userdir/:user', /*isLoggedIn,*/ async (req, res) => {
 // Qlik auth module handler
 authRouter.get('/module/:strategy?', async (req, res, next) => {
   const { strategy } = req.params;
-  let authStrategy = strategy || 'facebook';
+  let authStrategy = strategy || 'google';
   const { targetId, proxyRestUri } = req.query;
   req.session.login_type = MODULE_LOGIN;
   req.session.targetId = targetId;
@@ -80,27 +78,6 @@ authRouter.get('/module/:strategy?', async (req, res, next) => {
 
 // 401 Unauthorized
 authRouter.get('/failed', (_, res) => res.sendStatus(401));
-
-
-// Facebook auth callback
-authRouter.get('/facebook_auth_callback', passport.authenticate('facebook'), async (req,  res, next) => {
-  // console.log(req.user);
-  if(req.session.login_type === WEB_LOGIN) {
-    req.session.login_type = null;
-    webLoginSuccessHandler(req, res);
-  } else 
-  if (req.session.login_type === MODULE_LOGIN) {
-    // Qlik auth module handler
-    req.session.login_type = null;
-    const { UserDirectory, UserId, Attributes } = userFromRequest(req);
-    // store userid in session
-    req.session.user_id = `${UserDirectory.toLowerCase()};${UserId.toLowerCase()}`;
-    await redirectToQlik(UserDirectory, UserId, Attributes, req.session, res);
-  }
-  else {
-    next();
-  }
-});
 
 
 // Google auth callback
@@ -124,7 +101,6 @@ export default function useAuthRouter(app) {
     process.nextTick(() => cb(null, user));
   });
 
-  useFacebookStrategy(FBAuthCallback);
   useGoogleStrategy(GOOGAuthCallback);
   app.use('/api/auth', authRouter);
 }
