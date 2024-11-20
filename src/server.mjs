@@ -24,7 +24,7 @@ async function main() {
     const redisClient = new Redis(process.env.REDIS_URL);
 
     redisClient.on("error", (err) => {
-        console.log("Could not establish a connection with redis. " + err);
+        console.log(`Could not establish a connection with redis. ${err}`);
     });
     redisClient.on("connect", (err) => {
         console.log("Connected to redis successfully");
