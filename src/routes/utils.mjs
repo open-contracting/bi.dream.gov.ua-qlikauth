@@ -1,7 +1,6 @@
 import { getTicket, deleteUserAndSessions } from '../qlik-utils.mjs';
 
 export async function redirectToQlik(userdir, user, attributes, { targetId, proxyRestUri }, res) {
-    //const { targetId, proxyRestUri } = req.query;
     if(!targetId || !proxyRestUri)
       return res.sendStatus(400);
 
@@ -20,7 +19,6 @@ export async function redirectToQlik(userdir, user, attributes, { targetId, prox
       : `${TargetUri}?qlikTicket=${Ticket}`
 
     res.redirect(redirectURI);
-    //logger.info("Redirected ", redirectURI);
 }
 
 export function userFromRequest(req) {

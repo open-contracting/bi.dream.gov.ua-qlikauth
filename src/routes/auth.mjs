@@ -8,7 +8,6 @@ const WEB_LOGIN = 'web_login';
 const MODULE_LOGIN = 'module_login';
 const GOOGAuthCallback = `${process.env.DOMAIN}/api/auth/google_auth_callback`;
 const AUTH_FAILED_URL = `${process.env.DOMAIN}/api/auth/failed`;
-//const AUTH_SUCCESS_URL = '/api/auth/login_success';
 
 function isUserSessionActive(req, userdir, user) {
   return req.session 
@@ -19,7 +18,6 @@ const authRouter = express.Router();
 
 // web login using the specified strategy
 authRouter.get('/login/:strategy', async (req, res, next) => {
-  // console.log('Headers ', req.headers);
   const { strategy } = req.params;
   const redirect = req.query.redirect;
   if(!strategy || !redirect)
@@ -53,11 +51,8 @@ authRouter.get('/user/:userdir/:user', /*isLoggedIn,*/ async (req, res) => {
   if(!userdir || !user)
     return res.sendStatus(400); // Bad request
 
-  // if(isUserSessionActive(req, userdir, user)) {
   const data = await getUserSessions(process.env.QLIK_PROXY_SERVICE, userdir, user);
   res.json(data);
-  // } else 
-  //   res.json({});
 });
 
 
@@ -82,7 +77,6 @@ authRouter.get('/failed', (_, res) => res.sendStatus(401));
 
 // Google auth callback
 authRouter.get('/google_auth_callback', passport.authenticate('google'), async (req,  res, next) => {
-  // console.log(req.user);
   if(req.session.login_type === WEB_LOGIN) {
     req.session.login_type = null;
     webLoginSuccessHandler(req, res);

@@ -31,7 +31,6 @@ async function main() {
   });
 
 
-  //const maxAge = parseInt(process.env.SESSION_MAX_AGE, 10);
   app.use(session({
     store: new RedisStore({ client: redisClient }),
     resave: false,
@@ -40,10 +39,7 @@ async function main() {
     unset: 'destroy',
     cookie: {
       secure: false,
-      // secure: process.env.NODE_ENV === 'production', // if true only transmit cookie over https
-      // sameSite: process.env.SESSION_COOKIE_SAMESITE || 'lax',
       httpOnly: true, // if true prevent client side JS from reading the cookie 
-     // maxAge: !isNaN(maxAge) ? maxAge : 1000 * 60 * 10 // session max age in miliseconds
     }  
   }));
   app.get('/ping', (req, res) => res.send('pong'));

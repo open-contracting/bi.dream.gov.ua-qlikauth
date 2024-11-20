@@ -1,11 +1,6 @@
-// const fs = require("fs");
-// const path = require("path");
 import https from 'https';
 import fetch from 'node-fetch';
 import { v4 as uuidv4 } from 'uuid';
-//const WebSocket = require('ws');
-//const enigma = require('enigma.js');
-//const schema = require('enigma.js/schemas/12.612.0');
 
 import { caFile, keyFile, certFile } from'./certs.mjs';
 
@@ -49,7 +44,6 @@ export async function getTicket(url, dir, user, attributes, targetId) {
         agent: httpsAgent,
       }
     );
-    // console.log('Ticket headers', response.headers);
     data = await response.json();
   } catch(err) {
     data = {
