@@ -21,7 +21,7 @@ async function main() {
     // redis session store
     const RedisStore = connectRedis(session);
     //Configure redis client
-    const redisClient = new Redis(process.env.REDIS_URL);
+    const redisClient = new Redis(process.env.REDIS_URL || "redis://redis:6379/0");
 
     redisClient.on("error", (err) => {
         console.log(`Could not establish a connection with redis. ${err}`);
