@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from "uuid";
 
 const certsPath = process.env.QLIK_CERTS_PATH
     ? path.resolve(process.cwd(), process.env.QLIK_CERTS_PATH)
-    : path.resolve(process.cwd(), "certs");
+    : path.resolve(process.cwd(), process.env.NODE_ENV === "production" ? "/data/certs" : "certs");
 
 const xrfKey = process.env.QLIK_XRFKEY || "abcdefghijklmnop";
 
