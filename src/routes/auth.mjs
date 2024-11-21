@@ -7,6 +7,10 @@ const BASE_PATH = "/api/auth";
 
 const authRouter = express.Router();
 
+function makeSessionUserId(userdir, user) {
+    return `${userdir};${user}`.toLowerCase();
+}
+
 authRouter.get("/login/:strategy", async (req, res, next) => {
     const { strategy } = req.params;
     const redirect = req.query.redirect;
@@ -25,7 +29,7 @@ authRouter.get("/logout/:userdir/:user", async (req, res) => {
     const redirect = req.query.redirect;
     if (!userdir || !user || !redirect) return res.sendStatus(400); // Bad request
 
-    if (req.session && req.session.user_id === `${userdir};${user}`.toLowerCase()) {
+    if (req.session && req.session.user_id === makeSessionUserId(userdir, user)) {
         req.session = null;
         await deleteUserAndSessions(userdir, user);
     }
@@ -44,6 +48,7 @@ authRouter.get("/user/:userdir/:user", async (req, res) => {
 
 authRouter.get("/failed", (_, res) => res.sendStatus(401)); // Unauthorized
 
+// https://developers.google.com/identity/protocols/oauth2/web-server#creatingcred
 authRouter.get(
     "/google_auth_callback",
     passport.authenticate("google", {
@@ -52,19 +57,22 @@ authRouter.get(
         failureMessage: false,
     }),
     async (req, res) => {
-        const { displayName, id, provider, photos } = req.user;
-        const UserId = `${displayName};${id}`;
+        // `provider` is always set to "google".
+        // https://github.com/jaredhanson/passport-google-oauth2/blob/79f9ed6/lib/strategy.js#L73
+        // https://github.com/jaredhanson/passport-google-oauth2/tree/master/lib/profile
+        const { id, displayName, provider, photos } = req.user;
+        const user = `${displayName};${id}`;
 
-        await deleteUserAndSessions(provider, UserId);
+        await deleteUserAndSessions(provider, user);
 
-        const ticketData = await addTicket(provider, UserId, [
+        const ticketData = await addTicket(provider, user, [
             { photo: photos && photos.length > 0 ? photos[0].value : null },
             { userName: displayName },
         ]);
 
         if (!ticketData || !ticketData.Ticket) return res.sendStatus(401); // Unauthorized
 
-        req.session.user_id = `${provider};${UserId}`.toLowerCase();
+        req.session.user_id = makeSessionUserId(provider, user);
 
         const { Ticket } = ticketData;
         const redirect = req.session.redirect;
