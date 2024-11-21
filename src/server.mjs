@@ -17,7 +17,7 @@ async function main() {
     // https://expressjs.com/en/guide/behind-proxies.html
     app.enable("trust proxy");
     // Parse application/x-www-form-urlencoded, used by Google OAuth 2.0.
-    app.use(express.urlencoded());
+    app.use(express.urlencoded({ extended: true }));
     app.use(cors());
 
     const RedisStore = connectRedis(session);
