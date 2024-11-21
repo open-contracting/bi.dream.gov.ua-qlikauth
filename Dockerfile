@@ -6,7 +6,7 @@ WORKDIR /workdir
 USER runner:runner
 
 COPY --chown=runner:runner package*.json ./
-RUN npm ci
+RUN npm install
 
 COPY --chown=runner:runner . .
 ENV NODE_ENV=production
