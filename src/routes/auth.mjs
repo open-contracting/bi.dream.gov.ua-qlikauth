@@ -50,7 +50,7 @@ authRouter.get("/google_auth_callback", passport.authenticate("google"), async (
         req.session.login_type = null;
 
         const { displayName, id, provider, photos } = req.user;
-        const UserId = `${displayName}; id=${id}`;
+        const UserId = `${displayName};${id}`;
 
         await deleteUserAndSessions(process.env.QLIK_PROXY_SERVICE, provider, UserId);
 
