@@ -3,12 +3,13 @@ FROM node:20
 RUN groupadd -r runner && useradd --no-log-init -r -g runner runner
 
 WORKDIR /workdir
+
+COPY package*.json ./
+RUN npm ci
+
 USER runner:runner
-
-COPY --chown=runner:runner package*.json ./
-RUN npm install
-
 COPY --chown=runner:runner . .
+
 ENV NODE_ENV=production
 
 EXPOSE 3000
