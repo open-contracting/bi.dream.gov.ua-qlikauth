@@ -64,8 +64,6 @@ authRouter.get("/google_auth_callback", passport.authenticate("google"), async (
         const { displayName, id, provider, photos } = req.user;
         const UserId = `${displayName}; id=${id}`;
 
-        if (!UserId) return res.sendStatus(401); // Unauthorized
-
         await deleteUserAndSessions(process.env.QLIK_PROXY_SERVICE, provider, UserId);
 
         const ticketData = await getTicket(process.env.QLIK_PROXY_SERVICE, provider, UserId, [
