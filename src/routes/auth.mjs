@@ -7,6 +7,10 @@ const basePath = "/api/auth";
 
 const authRouter = express.Router();
 
+function sessionUserIdMatches(req, userdir, user) {
+    return req.session.user_id === makeSessionUserId(userdir, user);
+}
+
 function makeSessionUserId(userdir, user) {
     return `${userdir};${user}`.toLowerCase();
 }
@@ -28,7 +32,7 @@ authRouter.get("/logout/:userdir/:user", async (req, res) => {
     const redirect = req.query.redirect;
     if (!redirect) return res.sendStatus(400); // Bad request
 
-    if (req.session.user_id === makeSessionUserId(userdir, user)) {
+    if (sessionUserIdMatches(req, userdir, user)) {
         req.session.user_id = null;
         await deleteUserAndSessions(userdir, user);
     }
@@ -39,7 +43,7 @@ authRouter.get("/logout/:userdir/:user", async (req, res) => {
 authRouter.get("/user/:userdir/:user", async (req, res) => {
     const { userdir, user } = req.params;
 
-    const data = await getUserSessions(userdir, user);
+    const data = sessionUserIdMatches(req, userdir, user) ? await getUserSessions(userdir, user) : [];
 
     res.json(data);
 });
