@@ -26,7 +26,7 @@ const agent = new https.Agent({
  * user: string - User login
  * TargetId: string - Target ID
  */
-export async function getTicket(url, userdir, user, attributes, targetId) {
+export async function addTicket(url, userdir, user, attributes, targetId) {
     let data;
     try {
         const payload = {
@@ -36,6 +36,7 @@ export async function getTicket(url, userdir, user, attributes, targetId) {
         };
         if (targetId) payload.TargetId = targetId;
 
+        // https://help.qlik.com/en-US/sense-developer/May2024/Subsystems/ProxyServiceAPI/Content/Sense_ProxyServiceAPI/ProxyServiceAPI-ProxyServiceAPI-Authentication-Ticket-Add.htm
         const response = await fetch(`${url}ticket?xrfkey=${xrfKey}`, {
             agent,
             method: "POST",
@@ -44,14 +45,6 @@ export async function getTicket(url, userdir, user, attributes, targetId) {
         });
 
         data = await response.json();
-        // Expected data structure:
-        // {
-        //   UserDirectory: "INTERNAL",
-        //   UserId: "sa_repository",
-        //   Attributes: [ ],
-        //   Ticket: "mH-8E7tqt5ZLq-LF",
-        //   TargetUri: null
-        // }
     } catch (err) {
         data = { Ticket: null, error: err };
     }
@@ -83,9 +76,11 @@ async function makeUserRequest(url, userdir, user, method) {
 }
 
 export async function getUserSessions(url, userdir, user) {
+    // https://help.qlik.com/en-US/sense-developer/May2024/Subsystems/ProxyServiceAPI/Content/Sense_ProxyServiceAPI/ProxyServiceAPI-ProxyServiceAPI-Authentication-User-Get.htm
     return await makeUserRequest(url, userdir, user, "GET");
 }
 
 export async function deleteUserAndSessions(url, userdir, user) {
+    // https://help.qlik.com/en-US/sense-developer/May2024/Subsystems/ProxyServiceAPI/Content/Sense_ProxyServiceAPI/ProxyServiceAPI-ProxyServiceAPI-Authentication-User-Delete.htm
     return await makeUserRequest(url, userdir, user, "DELETE");
 }

@@ -1,7 +1,7 @@
 import express from "express";
 import passport from "passport";
 import GoogleStrategy from "passport-google-oauth20";
-import { deleteUserAndSessions, getTicket, getUserSessions } from "../qlik-utils.mjs";
+import { addTicket, deleteUserAndSessions, getUserSessions } from "../qlik-utils.mjs";
 
 const WEB_LOGIN = "web_login";
 const MODULE_LOGIN = "module_login";
@@ -66,7 +66,7 @@ authRouter.get("/google_auth_callback", passport.authenticate("google"), async (
 
         await deleteUserAndSessions(process.env.QLIK_PROXY_SERVICE, provider, UserId);
 
-        const ticketData = await getTicket(process.env.QLIK_PROXY_SERVICE, provider, UserId, [
+        const ticketData = await addTicket(process.env.QLIK_PROXY_SERVICE, provider, UserId, [
             { photo: photos && photos.length > 0 ? photos[0].value : null },
             { userName: displayName },
         ]);
