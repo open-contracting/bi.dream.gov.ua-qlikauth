@@ -27,7 +27,7 @@ authRouter.get("/logout/:userdir/:user", async (req, res) => {
 
     if (req.session && req.session.user_id === `${userdir};${user}`.toLowerCase()) {
         req.session = null;
-        await deleteUserAndSessions(process.env.QLIK_PROXY_SERVICE, userdir, user);
+        await deleteUserAndSessions(userdir, user);
     }
 
     res.redirect(redirect);
@@ -37,7 +37,7 @@ authRouter.get("/user/:userdir/:user", async (req, res) => {
     const { userdir, user } = req.params;
     if (!userdir || !user) return res.sendStatus(400); // Bad request
 
-    const data = await getUserSessions(process.env.QLIK_PROXY_SERVICE, userdir, user);
+    const data = await getUserSessions(userdir, user);
 
     res.json(data);
 });
@@ -55,9 +55,9 @@ authRouter.get(
         const { displayName, id, provider, photos } = req.user;
         const UserId = `${displayName};${id}`;
 
-        await deleteUserAndSessions(process.env.QLIK_PROXY_SERVICE, provider, UserId);
+        await deleteUserAndSessions(provider, UserId);
 
-        const ticketData = await addTicket(process.env.QLIK_PROXY_SERVICE, provider, UserId, [
+        const ticketData = await addTicket(provider, UserId, [
             { photo: photos && photos.length > 0 ? photos[0].value : null },
             { userName: displayName },
         ]);

@@ -4,6 +4,8 @@ import path from "node:path";
 import fetch from "node-fetch";
 import { v4 as uuidv4 } from "uuid";
 
+const baseUrl = process.env.QLIK_PROXY_SERVICE;
+
 const certsPath = process.env.QLIK_CERTS_PATH
     ? path.resolve(process.cwd(), process.env.QLIK_CERTS_PATH)
     : path.resolve(process.cwd(), process.env.NODE_ENV === "production" ? "/data/certs" : "certs");
@@ -20,13 +22,12 @@ const agent = new https.Agent({
 /**
  * Get ticket
  *
- * @param {string} base_url - Base URL of the Qlik proxy service
  * @param {string} userdir - User directory
  * @param {string} user - User ID
  * @param {string} targetId - Target ID
  * @returns JSON data payload
  */
-export async function addTicket(base_url, userdir, user, attributes, targetId) {
+export async function addTicket(userdir, user, attributes, targetId) {
     let data;
     try {
         const payload = {
@@ -37,7 +38,7 @@ export async function addTicket(base_url, userdir, user, attributes, targetId) {
         if (targetId) payload.TargetId = targetId;
 
         // https://help.qlik.com/en-US/sense-developer/May2024/Subsystems/ProxyServiceAPI/Content/Sense_ProxyServiceAPI/ProxyServiceAPI-ProxyServiceAPI-Authentication-Ticket-Add.htm
-        const url = `${base_url}ticket?xrfkey=${xrfKey}`;
+        const url = `${baseUrl}ticket?xrfkey=${xrfKey}`;
         console.log(`POST ${url} UserDirectory=${userdir} UserId=${user} userName=${attributes[1].userName}`);
         const response = await fetch(url, {
             agent,
@@ -56,16 +57,15 @@ export async function addTicket(base_url, userdir, user, attributes, targetId) {
 /**
  * Make an HTTP request to the Qlik proxy service
  *
- * @param {string} base_url - Base URL of the Qlik proxy service
  * @param {string} userdir - User directory
  * @param {string} user - User ID
  * @param {string} method - HTTP method (e.g., "GET", "DELETE")
  * @returns JSON data payload
  */
-async function makeUserRequest(base_url, userdir, user, method) {
+async function makeUserRequest(userdir, user, method) {
     let data;
     try {
-        const url = `${base_url}user/${userdir}/${user}?xrfkey=${xrfKey}`;
+        const url = `${baseUrl}user/${userdir}/${user}?xrfkey=${xrfKey}`;
         console.log(`${method} ${url}`);
         const response = await fetch(url, {
             agent,
@@ -80,12 +80,12 @@ async function makeUserRequest(base_url, userdir, user, method) {
     return data;
 }
 
-export async function getUserSessions(base_url, userdir, user) {
+export async function getUserSessions(userdir, user) {
     // https://help.qlik.com/en-US/sense-developer/May2024/Subsystems/ProxyServiceAPI/Content/Sense_ProxyServiceAPI/ProxyServiceAPI-ProxyServiceAPI-Authentication-User-Get.htm
-    return await makeUserRequest(base_url, userdir, user, "GET");
+    return await makeUserRequest(userdir, user, "GET");
 }
 
-export async function deleteUserAndSessions(base_url, userdir, user) {
+export async function deleteUserAndSessions(userdir, user) {
     // https://help.qlik.com/en-US/sense-developer/May2024/Subsystems/ProxyServiceAPI/Content/Sense_ProxyServiceAPI/ProxyServiceAPI-ProxyServiceAPI-Authentication-User-Delete.htm
-    return await makeUserRequest(base_url, userdir, user, "DELETE");
+    return await makeUserRequest(userdir, user, "DELETE");
 }
