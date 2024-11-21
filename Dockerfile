@@ -13,4 +13,4 @@ COPY --chown=runner:runner . .
 ENV NODE_ENV=production
 
 EXPOSE 3000
-CMD ["pm2-runtime", "src/server.mjs", "--instances", "4", "--name", "qlikauth"]
+CMD ["npx", "pm2-runtime", "src/server.mjs", "--instances", "4", "--name", "qlikauth"]
