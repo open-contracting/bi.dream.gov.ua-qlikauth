@@ -1,21 +1,14 @@
 import express from "express";
 import passport from "passport";
-import useGoogleStrategy from "../auth-strategy/google.mjs";
-import { deleteUserAndSessions, getUserSessions } from "../qlik-utils.mjs";
-import { redirectToQlik, userFromRequest, webLoginSuccessHandler } from "./utils.mjs";
+import GoogleStrategy from "passport-google-oauth20";
+import { deleteUserAndSessions, getTicket, getUserSessions } from "../qlik-utils.mjs";
 
 const WEB_LOGIN = "web_login";
 const MODULE_LOGIN = "module_login";
-const GOOGAuthCallback = `${process.env.DOMAIN}/api/auth/google_auth_callback`;
 const AUTH_FAILED_URL = `${process.env.DOMAIN}/api/auth/failed`;
-
-function isUserSessionActive(req, userdir, user) {
-    return req.session && req.session.user_id === `${userdir.toLowerCase()};${user.toLowerCase()}`;
-}
 
 const authRouter = express.Router();
 
-// web login using the specified strategy
 authRouter.get("/login/:strategy", async (req, res, next) => {
     const { strategy } = req.params;
     const redirect = req.query.redirect;
@@ -27,53 +20,67 @@ authRouter.get("/login/:strategy", async (req, res, next) => {
     passport.authenticate(strategy, { failureRedirect: AUTH_FAILED_URL, failureMessage: false })(req, res, next);
 });
 
-// web logout
 authRouter.get("/logout/:userdir/:user", async (req, res) => {
-    const redirect = req.query.redirect;
     const { userdir, user } = req.params;
+    const redirect = req.query.redirect;
     if (!userdir || !user || !redirect) return res.sendStatus(400); // Bad request
 
-    if (isUserSessionActive(req, userdir, user)) {
-        console.log("SESS", req.session, userdir, user);
+    if (req.session && req.session.user_id === `${userdir.toLowerCase()};${user.toLowerCase()}`) {
         req.session = null;
         await deleteUserAndSessions(process.env.QLIK_PROXY_SERVICE, userdir, user);
     }
+
     res.redirect(redirect);
 });
 
-authRouter.get(
-    "/user/:userdir/:user",
-    /*isLoggedIn,*/ async (req, res) => {
-        const { userdir, user } = req.params;
-        if (!userdir || !user) return res.sendStatus(400); // Bad request
+authRouter.get("/user/:userdir/:user", async (req, res) => {
+    const { userdir, user } = req.params;
+    if (!userdir || !user) return res.sendStatus(400); // Bad request
 
-        const data = await getUserSessions(process.env.QLIK_PROXY_SERVICE, userdir, user);
-        res.json(data);
-    },
-);
+    const data = await getUserSessions(process.env.QLIK_PROXY_SERVICE, userdir, user);
+
+    res.json(data);
+});
 
 // Qlik auth module handler
 authRouter.get("/module/:strategy?", async (req, res, next) => {
     const { strategy } = req.params;
     const authStrategy = strategy || "google";
     const { targetId, proxyRestUri } = req.query;
+
     req.session.login_type = MODULE_LOGIN;
     req.session.targetId = targetId;
     req.session.proxyRestUri = proxyRestUri;
 
-    // Authenticate against specified strategies
-    // successRedirect
     passport.authenticate(authStrategy, { failureRedirect: AUTH_FAILED_URL, failureMessage: false })(req, res, next);
 });
 
-// 401 Unauthorized
-authRouter.get("/failed", (_, res) => res.sendStatus(401));
+authRouter.get("/failed", (_, res) => res.sendStatus(401)); // Unauthorized
 
-// Google auth callback
 authRouter.get("/google_auth_callback", passport.authenticate("google"), async (req, res, next) => {
     if (req.session.login_type === WEB_LOGIN) {
         req.session.login_type = null;
-        webLoginSuccessHandler(req, res);
+
+        const { displayName, id, provider, photos } = req.user;
+        const UserId = `${displayName}; id=${id}`;
+
+        if (!UserId) return res.sendStatus(401); // Unauthorized
+
+        await deleteUserAndSessions(process.env.QLIK_PROXY_SERVICE, provider, UserId);
+
+        const ticketData = await getTicket(process.env.QLIK_PROXY_SERVICE, provider, UserId, [
+            { photo: photos && photos.length > 0 ? photos[0].value : null },
+            { userName: displayName },
+        ]);
+
+        if (!ticketData || !ticketData.Ticket) return res.sendStatus(401); // Unauthorized
+
+        req.session.user_id = `${provider.toLowerCase()};${UserId.toLowerCase()}`;
+
+        const { Ticket } = ticketData;
+        const redirect = req.session.redirect;
+
+        res.redirect(`${redirect}${redirect.indexOf("?") > 0 ? "&" : "?"}qlikTicket=${Ticket}`);
     }
 });
 
@@ -88,6 +95,20 @@ export default function useAuthRouter(app) {
         process.nextTick(() => cb(null, user));
     });
 
-    useGoogleStrategy(GOOGAuthCallback);
+    passport.use(
+        new GoogleStrategy(
+            {
+                clientID: process.env.GOOGLE_CLIENT_ID,
+                clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+                callbackURL: `${process.env.DOMAIN}/api/auth/google_auth_callback`,
+                scope: ["profile"],
+                state: true,
+            },
+            (accessToken, refreshToken, profile, cb) => {
+                return cb(null, profile);
+            },
+        ),
+    );
+
     app.use("/api/auth", authRouter);
 }

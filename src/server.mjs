@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import express from "express";
 import session from "express-session";
 import Redis from "ioredis";
+
 dotenv.config();
 
 import useAuthRouter from "./routes/auth.mjs";
@@ -18,16 +19,14 @@ async function main() {
     // parse application/x-www-form-urlencoded
     app.use(express.urlencoded({ extended: true }));
 
-    // redis session store
     const RedisStore = connectRedis(session);
-    //Configure redis client
     const redisClient = new Redis(process.env.REDIS_URL || "redis://redis:6379/0");
 
     redisClient.on("error", (err) => {
-        console.log(`Could not establish a connection with redis. ${err}`);
+        console.log(`Redis connection failed: ${err}`);
     });
-    redisClient.on("connect", (err) => {
-        console.log("Connected to redis successfully");
+    redisClient.on("connect", () => {
+        console.log("Redis connection succeeded");
     });
 
     app.use(
@@ -42,12 +41,13 @@ async function main() {
             cookie: { secure: true },
         }),
     );
+
     app.get("/ping", (req, res) => res.send("pong"));
 
     useAuthRouter(app);
 
     app.listen(port, () => {
-        console.log(`qlik auth module listening on port ${port}`);
+        console.log(`qlikauth listening on port ${port}`);
     });
 }
 

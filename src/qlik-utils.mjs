@@ -1,16 +1,20 @@
+import fs from "node:fs";
 import https from "node:https";
+import path from "node:path";
 import fetch from "node-fetch";
 import { v4 as uuidv4 } from "uuid";
 
-import { caFile, certFile, keyFile } from "./certs.mjs";
+const certsPath = process.env.QLIK_CERTS_PATH
+    ? path.resolve(process.cwd(), process.env.QLIK_CERTS_PATH)
+    : path.resolve(process.cwd(), "certs");
 
 const xrfKey = process.env.QLIK_XRFKEY || "abcdefghijklmnop";
 
-const httpsAgent = new https.Agent({
+const agent = new https.Agent({
     rejectUnauthorized: false,
-    ca: caFile,
-    key: keyFile,
-    cert: certFile,
+    ca: fs.readFileSync(path.resolve(certsPath, "root.pem")),
+    key: fs.readFileSync(path.resolve(certsPath, "client_key.pem")),
+    cert: fs.readFileSync(path.resolve(certsPath, "client.pem")),
 });
 
 /**
@@ -18,144 +22,70 @@ const httpsAgent = new https.Agent({
  *
  * url: string - qlik sense server url
  *  e.g.: https://parana.rbcgrp.com:4243/qps/qauth/
- * dir: string - User directory
+ * userdir: string - User directory
  * user: string - User login
  * TargetId: string - Target ID
  */
-export async function getTicket(url, dir, user, attributes, targetId) {
+export async function getTicket(url, userdir, user, attributes, targetId) {
     let data;
     try {
         const payload = {
-            UserDirectory: dir,
+            UserDirectory: userdir,
             UserId: user,
             Attributes: attributes,
         };
         if (targetId) payload.TargetId = targetId;
 
         const response = await fetch(`${url}ticket?xrfkey=${xrfKey}`, {
+            agent,
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-Qlik-Xrfkey": xrfKey,
-            },
+            headers: { "Content-Type": "application/json", "X-Qlik-Xrfkey": xrfKey },
             body: JSON.stringify(payload),
-            agent: httpsAgent,
         });
-        data = await response.json();
-    } catch (err) {
-        data = {
-            Ticket: null,
-            error: err,
-        };
-    }
-    /*
-  Expected data structure:
-  {
-    UserDirectory: "INTERNAL",
-    UserId: "sa_repository",
-    Attributes: [ ],
-    Ticket: "mH-8E7tqt5ZLq-LF",
-    TargetUri: null
-  }
-  */
-    return data;
-}
 
-/**
- * Delete user and related sessions
- * @param {string} url - Qlik proxy service url
- * @param {string} dir - user directory
- * @param {string} user - user
- * @returns
- */
-export async function deleteUserAndSessions(url, dir, user) {
-    let data;
-    try {
-        const response = await fetch(`${url}/user/${dir}/${user}?xrfkey=${xrfKey}`, {
-            method: "DELETE",
-            headers: {
-                "Content-Type": "application/json",
-                "X-Qlik-Xrfkey": xrfKey,
-            },
-            agent: httpsAgent,
-        });
         data = await response.json();
+        // Expected data structure:
+        // {
+        //   UserDirectory: "INTERNAL",
+        //   UserId: "sa_repository",
+        //   Attributes: [ ],
+        //   Ticket: "mH-8E7tqt5ZLq-LF",
+        //   TargetUri: null
+        // }
     } catch (err) {
-        console.error(err);
+        data = { Ticket: null, error: err };
     }
     return data;
 }
 
 /**
- * Add new session for a user
- * @param {string} url - Qlik proxy service url
- * @param {string} dir - user directory
- * @param {string} user - user
- * @returns JSON
- */
-export async function addSession(url, dir, user) {
-    let data;
-    try {
-        const payload = {
-            UserDirectory: dir,
-            UserId: user,
-            Attributes: [],
-            SessionId: uuidv4(),
-        };
-
-        const response = await fetch(`${url}session?xrfkey=${xrfKey}`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-Qlik-Xrfkey": xrfKey,
-            },
-            body: JSON.stringify(payload),
-            agent: httpsAgent,
-        });
-        data = await response.json();
-    } catch (err) {
-        data = {
-            error: err,
-        };
-    }
-    /*
-  {
-  "UserDirectory": "<user directory>",
-  "UserId": "<unique user id>",
-  "Attributes":
-    [ { "<Attribute1>": "<value1a>" },
-        { "<Attribute1>": "<value1b>" }, [attributes are not unique]
-        { "<Attribute2>": "" }, [value can be empty]
-        { "<Attribute3>": "<value3>" },
-        ...
-    ] [optional],
-  "SessionId": "<session id>"
-  }
-  */
-    return data;
-}
-
-/**
- * Get user sessions
- * @param {string} url
- * @param {string} userdir
- * @param {string} user
+ * Make an HTTP request to the Qlik proxy service
+ * @param {string} url - Base URL of the Qlik proxy service
+ * @param {string} userdir - User directory
+ * @param {string} user - User
+ * @param {string} method - HTTP method (e.g., "GET", "DELETE")
  * @returns JSON data payload
  */
-export async function getUserSessions(url, userdir, user) {
+async function makeUserRequest(url, userdir, user, method) {
     let data;
     try {
         const response = await fetch(`${url}user/${userdir}/${user}?xrfkey=${xrfKey}`, {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-                "X-Qlik-Xrfkey": xrfKey,
-            },
-            agent: httpsAgent,
+            agent,
+            method,
+            headers: { "Content-Type": "application/json", "X-Qlik-Xrfkey": xrfKey },
         });
+
         data = await response.json();
     } catch (err) {
         console.error(err);
     }
     return data;
+}
+
+export async function getUserSessions(url, userdir, user) {
+    return await makeUserRequest(url, userdir, user, "GET");
+}
+
+export async function deleteUserAndSessions(url, userdir, user) {
+    return await makeUserRequest(url, userdir, user, "DELETE");
 }
