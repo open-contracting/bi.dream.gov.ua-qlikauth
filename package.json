@@ -1,14 +1,7 @@
 {
-  "name": "qlikauthmodule",
+  "name": "qlikauth",
   "version": "1.0.0",
-  "description": "Qlik auth module",
-  "main": "index.js",
-  "scripts": {
-    "start": "nodemon --inspect=0.0.0.0 --ext yaml,js,mjs src/server.mjs"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "RBCGRP",
+  "private": true,
   "dependencies": {
     "connect-redis": "^6.1.3",
     "cors": "^2.8.5",
