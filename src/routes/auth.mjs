@@ -4,8 +4,6 @@ import GoogleStrategy from "passport-google-oauth20";
 import { addTicket, deleteUserAndSessions, getUserSessions } from "../qlik-utils.mjs";
 
 const WEB_LOGIN = "web_login";
-const MODULE_LOGIN = "module_login";
-const AUTH_FAILED_URL = `${process.env.DOMAIN}/api/auth/failed`;
 
 const authRouter = express.Router();
 
@@ -17,7 +15,10 @@ authRouter.get("/login/:strategy", async (req, res, next) => {
     req.session.login_type = WEB_LOGIN;
     req.session.redirect = redirect;
 
-    passport.authenticate(strategy, { failureRedirect: AUTH_FAILED_URL, failureMessage: false })(req, res, next);
+    passport.authenticate(strategy, {
+        failureRedirect: `${process.env.DOMAIN}/api/auth/failed`,
+        failureMessage: false,
+    })(req, res, next);
 });
 
 authRouter.get("/logout/:userdir/:user", async (req, res) => {
@@ -40,19 +41,6 @@ authRouter.get("/user/:userdir/:user", async (req, res) => {
     const data = await getUserSessions(process.env.QLIK_PROXY_SERVICE, userdir, user);
 
     res.json(data);
-});
-
-// Qlik auth module handler
-authRouter.get("/module/:strategy?", async (req, res, next) => {
-    const { strategy } = req.params;
-    const authStrategy = strategy || "google";
-    const { targetId, proxyRestUri } = req.query;
-
-    req.session.login_type = MODULE_LOGIN;
-    req.session.targetId = targetId;
-    req.session.proxyRestUri = proxyRestUri;
-
-    passport.authenticate(authStrategy, { failureRedirect: AUTH_FAILED_URL, failureMessage: false })(req, res, next);
 });
 
 authRouter.get("/failed", (_, res) => res.sendStatus(401)); // Unauthorized
