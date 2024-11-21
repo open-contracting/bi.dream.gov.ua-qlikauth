@@ -11,14 +11,13 @@ function makeSessionUserId(userdir, user) {
     return `${userdir};${user}`.toLowerCase();
 }
 
-authRouter.get("/login/:strategy", async (req, res, next) => {
-    const { strategy } = req.params;
+authRouter.get("/login/google", async (req, res, next) => {
     const redirect = req.query.redirect;
-    if (!strategy || !redirect) return res.sendStatus(400); // Bad request
+    if (!redirect) return res.sendStatus(400); // Bad request
 
-    req.session.redirect = redirect;
-
-    passport.authenticate(strategy, {
+    passport.authenticate("google", {
+        // https://medium.com/passportjs/application-state-in-oauth-2-0-1d94379164e
+        state: { redirect: redirect },
         // https://developers.google.com/identity/protocols/oauth2/scopes
         scope: ["profile"],
     })(req, res, next);
@@ -75,7 +74,7 @@ authRouter.get(
         req.session.user_id = makeSessionUserId(provider, user);
 
         const { Ticket } = ticketData;
-        const redirect = req.session.redirect;
+        const redirect = req.authInfo.state.redirect;
         const url = `${redirect}${redirect.indexOf("?") > 0 ? "&" : "?"}qlikTicket=${Ticket}`;
 
         console.log(`Redirect ${url}`);
@@ -100,7 +99,7 @@ export default function useAuthRouter(app) {
                 clientID: process.env.GOOGLE_CLIENT_ID,
                 clientSecret: process.env.GOOGLE_CLIENT_SECRET,
                 callbackURL: `${process.env.DOMAIN}${BASE_PATH}/google_auth_callback`,
-                state: true,
+                store: true,
             },
             (accessToken, refreshToken, profile, cb) => {
                 return cb(null, profile);
