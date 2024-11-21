@@ -38,7 +38,6 @@ async function main() {
             saveUninitialized: false,
             unset: "destroy",
             // Default is { path: '/', httpOnly: true, secure: false, maxAge: null }
-            // https://expressjs.com/en/resources/middleware/session.html#cookie
             cookie: { secure: true },
         }),
     );
