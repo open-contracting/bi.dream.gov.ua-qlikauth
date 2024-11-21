@@ -26,7 +26,7 @@ authRouter.get("/logout/:userdir/:user", async (req, res) => {
     const redirect = req.query.redirect;
     if (!userdir || !user || !redirect) return res.sendStatus(400); // Bad request
 
-    if (req.session && req.session.user_id === `${userdir.toLowerCase()};${user.toLowerCase()}`) {
+    if (req.session && req.session.user_id === `${userdir};${user}`.toLowerCase()) {
         req.session = null;
         await deleteUserAndSessions(process.env.QLIK_PROXY_SERVICE, userdir, user);
     }
@@ -61,7 +61,7 @@ authRouter.get("/google_auth_callback", passport.authenticate("google"), async (
 
         if (!ticketData || !ticketData.Ticket) return res.sendStatus(401); // Unauthorized
 
-        req.session.user_id = `${provider.toLowerCase()};${UserId.toLowerCase()}`;
+        req.session.user_id = `${provider};${UserId}`.toLowerCase();
 
         const { Ticket } = ticketData;
         const redirect = req.session.redirect;
