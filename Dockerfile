@@ -1,5 +1,3 @@
-# https://hub.docker.com/r/keymetrics/pm2qs has no Node 20+ images.
-# https://github.com/keymetrics/docker-pm2/blob/master/tags/latest/slim/Dockerfile
 FROM node:20
 
 RUN groupadd -r runner && useradd --no-log-init -r -g runner runner
