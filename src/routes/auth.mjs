@@ -26,7 +26,7 @@ authRouter.get("/login/google", async (req, res, next) => {
 authRouter.get("/logout/:userdir/:user", async (req, res) => {
     const { userdir, user } = req.params;
     const redirect = req.query.redirect;
-    if (!userdir || !user || !redirect) return res.sendStatus(400); // Bad request
+    if (!redirect) return res.sendStatus(400); // Bad request
 
     if (req.session && req.session.user_id === makeSessionUserId(userdir, user)) {
         req.session = null;
@@ -38,7 +38,6 @@ authRouter.get("/logout/:userdir/:user", async (req, res) => {
 
 authRouter.get("/user/:userdir/:user", async (req, res) => {
     const { userdir, user } = req.params;
-    if (!userdir || !user) return res.sendStatus(400); // Bad request
 
     const data = await getUserSessions(userdir, user);
 
