@@ -28,8 +28,8 @@ authRouter.get("/logout/:userdir/:user", async (req, res) => {
     const redirect = req.query.redirect;
     if (!redirect) return res.sendStatus(400); // Bad request
 
-    if (req.session && req.session.user_id === makeSessionUserId(userdir, user)) {
-        req.session = null;
+    if (req.session.user_id === makeSessionUserId(userdir, user)) {
+        req.session.user_id = null;
         await deleteUserAndSessions(userdir, user);
     }
 
