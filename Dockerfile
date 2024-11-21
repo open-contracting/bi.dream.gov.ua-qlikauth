@@ -1,4 +1,4 @@
-FROM node:18-alpine
+FROM node:20
 
 RUN groupadd -r runner && useradd --no-log-init -r -g runner runner
 
