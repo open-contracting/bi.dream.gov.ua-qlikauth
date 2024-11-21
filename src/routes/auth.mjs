@@ -65,8 +65,10 @@ authRouter.get("/google_auth_callback", passport.authenticate("google"), async (
 
         const { Ticket } = ticketData;
         const redirect = req.session.redirect;
+        const url = `${redirect}${redirect.indexOf("?") > 0 ? "&" : "?"}qlikTicket=${Ticket}`;
 
-        res.redirect(`${redirect}${redirect.indexOf("?") > 0 ? "&" : "?"}qlikTicket=${Ticket}`);
+        console.log(`Redirect ${url}`);
+        res.redirect(url);
     }
 });
 
