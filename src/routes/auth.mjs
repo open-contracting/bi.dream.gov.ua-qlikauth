@@ -1,7 +1,7 @@
 import express from "express";
 import passport from "passport";
 import GoogleStrategy from "passport-google-oauth20";
-import { addTicket, deleteUserAndSessions, getUserSessions } from "../qlik-utils.mjs";
+import { addTicket, deleteUserAndSessions, getUserSessions } from "../qlik.mjs";
 
 const WEB_LOGIN = "web_login";
 
