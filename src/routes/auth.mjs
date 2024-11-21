@@ -3,7 +3,7 @@ import passport from "passport";
 import GoogleStrategy from "passport-google-oauth20";
 import { addTicket, deleteUserAndSessions, getUserSessions } from "../qlik.mjs";
 
-const WEB_LOGIN = "web_login";
+const BASE_PATH = "/api/auth";
 
 const authRouter = express.Router();
 
@@ -12,12 +12,11 @@ authRouter.get("/login/:strategy", async (req, res, next) => {
     const redirect = req.query.redirect;
     if (!strategy || !redirect) return res.sendStatus(400); // Bad request
 
-    req.session.login_type = WEB_LOGIN;
     req.session.redirect = redirect;
 
     passport.authenticate(strategy, {
-        failureRedirect: `${process.env.DOMAIN}/api/auth/failed`,
-        failureMessage: false,
+        // https://developers.google.com/identity/protocols/oauth2/scopes
+        scope: ["profile"],
     })(req, res, next);
 });
 
@@ -45,10 +44,14 @@ authRouter.get("/user/:userdir/:user", async (req, res) => {
 
 authRouter.get("/failed", (_, res) => res.sendStatus(401)); // Unauthorized
 
-authRouter.get("/google_auth_callback", passport.authenticate("google"), async (req, res, next) => {
-    if (req.session.login_type === WEB_LOGIN) {
-        req.session.login_type = null;
-
+authRouter.get(
+    "/google_auth_callback",
+    passport.authenticate("google", {
+        // https://www.passportjs.org/concepts/authentication/middleware/
+        failureRedirect: `${process.env.DOMAIN}${BASE_PATH}/failed`,
+        failureMessage: false,
+    }),
+    async (req, res) => {
         const { displayName, id, provider, photos } = req.user;
         const UserId = `${displayName};${id}`;
 
@@ -69,8 +72,8 @@ authRouter.get("/google_auth_callback", passport.authenticate("google"), async (
 
         console.log(`Redirect ${url}`);
         res.redirect(url);
-    }
-});
+    },
+);
 
 export default function useAuthRouter(app) {
     app.use(passport.initialize());
@@ -88,8 +91,7 @@ export default function useAuthRouter(app) {
             {
                 clientID: process.env.GOOGLE_CLIENT_ID,
                 clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-                callbackURL: `${process.env.DOMAIN}/api/auth/google_auth_callback`,
-                scope: ["profile"],
+                callbackURL: `${process.env.DOMAIN}${BASE_PATH}/google_auth_callback`,
                 state: true,
             },
             (accessToken, refreshToken, profile, cb) => {
@@ -98,5 +100,5 @@ export default function useAuthRouter(app) {
         ),
     );
 
-    app.use("/api/auth", authRouter);
+    app.use(BASE_PATH, authRouter);
 }
