@@ -13,7 +13,7 @@ const certsPath = process.env.QLIK_CERTS_PATH
 const xrfKey = process.env.QLIK_XRFKEY || "abcdefghijklmnop";
 
 const agent = new https.Agent({
-    rejectUnauthorized: false,
+    rejectUnauthorized: false, // allow self-signed certificates
     ca: fs.readFileSync(path.resolve(certsPath, "root.pem")),
     key: fs.readFileSync(path.resolve(certsPath, "client_key.pem")),
     cert: fs.readFileSync(path.resolve(certsPath, "client.pem")),
