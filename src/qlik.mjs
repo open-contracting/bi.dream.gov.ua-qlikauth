@@ -10,6 +10,7 @@ const certsPath = process.env.QLIK_CERTS_PATH
 
 const xrfKey = process.env.QLIK_XRFKEY || "abcdefghijklmnop";
 
+// https://undici.nodejs.org/#/docs/best-practices/client-certificate.md
 const dispatcher = new Agent({
     connect: {
         rejectUnauthorized: false, // allow self-signed certificates

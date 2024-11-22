@@ -24,8 +24,10 @@ authRouter.get("/logout/:userdir/:user", async (req, res) => {
     if (!redirect) return res.sendStatus(400); // Bad request
 
     if (req.session.user) {
-        req.session = null; // https://expressjs.com/en/resources/middleware/session.html#unset
-        await deleteUserAndSessions(req.session.provider, req.session.user);
+        const { provider, user } = req.session;
+        // https://expressjs.com/en/resources/middleware/session.html#unset
+        req.session = null;
+        await deleteUserAndSessions(provider, user);
     }
 
     res.redirect(redirect);
