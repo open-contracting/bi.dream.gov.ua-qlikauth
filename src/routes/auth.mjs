@@ -3,7 +3,7 @@ import passport from "passport";
 import GoogleStrategy from "passport-google-oauth20";
 import { addTicket, deleteUserAndSessions, getUserSessions } from "../qlik.mjs";
 
-const basePath = "/api/auth";
+const baseUrl = process.env.BASE_URL || "/api/auth";
 
 const authRouter = express.Router();
 
@@ -42,7 +42,7 @@ authRouter.get(
     "/google_auth_callback",
     passport.authenticate("google", {
         // https://www.passportjs.org/concepts/authentication/middleware/
-        failureRedirect: `${process.env.DOMAIN}${basePath}/failed`,
+        failureRedirect: `${baseUrl}/failed`,
         failureMessage: false,
     }),
     async (req, res) => {
@@ -91,7 +91,9 @@ export default function useAuthRouter(app) {
             {
                 clientID: process.env.GOOGLE_CLIENT_ID,
                 clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-                callbackURL: `${process.env.DOMAIN}${basePath}/google_auth_callback`,
+                // https://github.com/jaredhanson/passport-oauth2/blob/be9bf58/lib/strategy.js#L148
+                // https://github.com/jaredhanson/passport-oauth2/blob/master/lib/utils.js
+                callbackURL: `${baseUrl}/google_auth_callback`,
                 store: true,
             },
             (accessToken, refreshToken, profile, cb) => {
@@ -100,5 +102,5 @@ export default function useAuthRouter(app) {
         ),
     );
 
-    app.use(basePath, authRouter);
+    app.use(baseUrl, authRouter);
 }
