@@ -1,11 +1,8 @@
 import connectRedis from "connect-redis";
 import cors from "cors";
-import dotenv from "dotenv";
 import express from "express";
 import session from "express-session";
 import Redis from "ioredis";
-
-dotenv.config();
 
 import useAuthRouter from "./routes/auth.mjs";
 
