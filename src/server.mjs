@@ -31,6 +31,7 @@ async function main() {
         session({
             store: new RedisStore({ client: redisClient }),
             secret: process.env.SESSION_SECRET,
+            // The defaults will change to false in the future.
             resave: false,
             saveUninitialized: false,
             unset: "destroy",

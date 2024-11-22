@@ -63,6 +63,9 @@ authRouter.get(
         // https://github.com/jaredhanson/passport-google-oauth2/blob/79f9ed6/lib/strategy.js#L73
         // https://github.com/jaredhanson/passport-google-oauth2/tree/master/lib/profile
         const { id, displayName, provider, photos } = req.user;
+        // `displayName` can contain a semi-colon.
+        // https://myaccount.google.com/profile/name/edit
+        // https://developers.google.com/identity/openid-connect/openid-connect#id_token-name
         const user = `${displayName};${id}`;
 
         await deleteUserAndSessions(provider, user);
@@ -88,10 +91,10 @@ authRouter.get(
 export default function useAuthRouter(app) {
     app.use(passport.initialize());
 
+    // https://www.passportjs.org/concepts/authentication/sessions/
     passport.serializeUser((user, cb) => {
         process.nextTick(() => cb(null, user));
     });
-
     passport.deserializeUser((user, cb) => {
         process.nextTick(() => cb(null, user));
     });
