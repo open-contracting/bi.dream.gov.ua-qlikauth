@@ -1,6 +1,6 @@
 import fs from "node:fs";
-import https from "node:https";
 import path from "node:path";
+import { Agent } from "undici";
 
 const baseUrl = process.env.QLIK_PROXY_SERVICE;
 
@@ -10,11 +10,13 @@ const certsPath = process.env.QLIK_CERTS_PATH
 
 const xrfKey = process.env.QLIK_XRFKEY || "abcdefghijklmnop";
 
-const agent = new https.Agent({
-    rejectUnauthorized: false, // allow self-signed certificates
-    ca: fs.readFileSync(path.resolve(certsPath, "root.pem")),
-    key: fs.readFileSync(path.resolve(certsPath, "client_key.pem")),
-    cert: fs.readFileSync(path.resolve(certsPath, "client.pem")),
+const dispatcher = new Agent({
+    connect: {
+        rejectUnauthorized: false, // allow self-signed certificates
+        ca: fs.readFileSync(path.resolve(certsPath, "root.pem")),
+        key: fs.readFileSync(path.resolve(certsPath, "client_key.pem")),
+        cert: fs.readFileSync(path.resolve(certsPath, "client.pem")),
+    },
 });
 
 /**
@@ -39,7 +41,7 @@ export async function addTicket(userdir, user, attributes, targetId) {
         const url = `${baseUrl}ticket?xrfkey=${xrfKey}`;
         console.log(`POST ${url} UserDirectory=${userdir} UserId=${user} userName=${attributes[1].userName}`);
         const response = await fetch(url, {
-            agent,
+            dispatcher,
             method: "POST",
             headers: { "Content-Type": "application/json", "X-Qlik-Xrfkey": xrfKey },
             body: JSON.stringify(payload),
@@ -66,7 +68,7 @@ async function makeUserRequest(userdir, user, method) {
         const url = `${baseUrl}user/${userdir}/${user}?xrfkey=${xrfKey}`;
         console.log(`${method} ${url}`);
         const response = await fetch(url, {
-            agent,
+            dispatcher,
             method,
             headers: { "Content-Type": "application/json", "X-Qlik-Xrfkey": xrfKey },
         });
