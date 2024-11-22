@@ -7,14 +7,6 @@ const basePath = "/api/auth";
 
 const authRouter = express.Router();
 
-function sessionUserIdMatches(req, userdir, user) {
-    return req.session.user_id === makeSessionUserId(userdir, user);
-}
-
-function makeSessionUserId(userdir, user) {
-    return `${userdir};${user}`.toLowerCase();
-}
-
 authRouter.get("/login/google", async (req, res, next) => {
     const redirect = req.query.redirect;
     if (!redirect) return res.sendStatus(400); // Bad request
@@ -28,24 +20,19 @@ authRouter.get("/login/google", async (req, res, next) => {
 });
 
 authRouter.get("/logout/:userdir/:user", async (req, res) => {
-    const { userdir, user } = req.params;
     const redirect = req.query.redirect;
     if (!redirect) return res.sendStatus(400); // Bad request
 
-    if (sessionUserIdMatches(req, userdir, user)) {
+    if (req.session.user) {
         req.session = null; // https://expressjs.com/en/resources/middleware/session.html#unset
-        await deleteUserAndSessions(userdir, user);
+        await deleteUserAndSessions(req.session.provider, req.session.user);
     }
 
     res.redirect(redirect);
 });
 
 authRouter.get("/user/:userdir/:user", async (req, res) => {
-    const { userdir, user } = req.params;
-
-    const data = sessionUserIdMatches(req, userdir, user) ? await getUserSessions(userdir, user) : [];
-
-    res.json(data);
+    res.json(req.session.user ? await getUserSessions(req.session.provider, req.session.user) : []);
 });
 
 authRouter.get("/failed", (_, res) => res.sendStatus(401)); // Unauthorized
@@ -77,7 +64,8 @@ authRouter.get(
 
         if (!ticketData || !ticketData.Ticket) return res.sendStatus(401); // Unauthorized
 
-        req.session.user_id = makeSessionUserId(provider, user);
+        req.session.provider = provider;
+        req.session.user = user;
 
         const redirect = req.authInfo.state.redirect;
         const url = `${redirect}${redirect.indexOf("?") > 0 ? "&" : "?"}qlikTicket=${ticketData.Ticket}`;
