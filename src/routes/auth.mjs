@@ -79,9 +79,8 @@ authRouter.get(
 
         req.session.user_id = makeSessionUserId(provider, user);
 
-        const { Ticket } = ticketData;
         const redirect = req.authInfo.state.redirect;
-        const url = `${redirect}${redirect.indexOf("?") > 0 ? "&" : "?"}qlikTicket=${Ticket}`;
+        const url = `${redirect}${redirect.indexOf("?") > 0 ? "&" : "?"}qlikTicket=${ticketData.Ticket}`;
 
         console.log(`Redirect ${url}`);
         res.redirect(url);
