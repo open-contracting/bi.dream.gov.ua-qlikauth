@@ -1,5 +1,4 @@
 import connectRedis from "connect-redis";
-import cors from "cors";
 import express from "express";
 import session from "express-session";
 import Redis from "ioredis";
@@ -15,7 +14,6 @@ async function main() {
     app.enable("trust proxy");
     // Parse application/x-www-form-urlencoded, used by Google OAuth 2.0.
     app.use(express.urlencoded({ extended: true }));
-    app.use(cors());
 
     const RedisStore = connectRedis(session);
     const redisClient = new Redis(process.env.REDIS_URL || "redis://redis:6379/0");
