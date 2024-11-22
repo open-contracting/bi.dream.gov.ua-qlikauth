@@ -2,7 +2,6 @@ import fs from "node:fs";
 import https from "node:https";
 import path from "node:path";
 import fetch from "node-fetch";
-import { v4 as uuidv4 } from "uuid";
 
 const baseUrl = process.env.QLIK_PROXY_SERVICE;
 
