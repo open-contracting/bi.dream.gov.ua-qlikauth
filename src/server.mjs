@@ -40,8 +40,6 @@ async function main() {
         }),
     );
 
-    app.get("/ping", (req, res) => res.send("pong"));
-
     useAuthRouter(app);
 
     const port = process.env.PORT || 3000;
