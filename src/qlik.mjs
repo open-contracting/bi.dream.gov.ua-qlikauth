@@ -47,7 +47,7 @@ export async function addTicket(userdir, user, attributes, targetId) {
             body: JSON.stringify(payload),
         });
 
-        return await response.json().Ticket;
+        return (await response.json()).Ticket;
     } catch (err) {
         console.error(err);
     }
