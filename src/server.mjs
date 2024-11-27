@@ -32,7 +32,6 @@ async function main() {
             // The defaults will change to false in the future.
             resave: false,
             saveUninitialized: false,
-            unset: "destroy",
             // Default is { path: '/', httpOnly: true, secure: false, maxAge: null }
             cookie: { secure: true, maxAge: 604800000 }, // 1 week in ms
         }),

@@ -7,34 +7,39 @@ const baseUrl = process.env.BASE_URL || "/api/auth";
 
 const authRouter = express.Router();
 
-authRouter.get("/login/google", async (req, res, next) => {
-    const redirect = req.query.redirect;
-    if (!redirect) return res.sendStatus(400); // Bad request
+function hasRedirect(req, res, next) {
+    if (req.query.redirect) next();
+    else res.sendStatus(400); // Bad request
+}
 
-    req.session.regenerate((err) => {
-        if (err) next(err);
+authRouter.get(
+    "/login/google",
+    hasRedirect,
+    passport.authenticate("google", {
+        // https://medium.com/passportjs/application-state-in-oauth-2-0-1d94379164e
+        state: { redirect: redirect },
+        // https://developers.google.com/identity/protocols/oauth2/scopes
+        scope: ["profile"],
+    }),
+);
 
-        passport.authenticate("google", {
-            // https://medium.com/passportjs/application-state-in-oauth-2-0-1d94379164e
-            state: { redirect: redirect },
-            // https://developers.google.com/identity/protocols/oauth2/scopes
-            scope: ["profile"],
-        })(req, res, next);
-    });
-});
-
-authRouter.get("/logout/:userdir/:user", async (req, res) => {
-    const redirect = req.query.redirect;
-    if (!redirect) return res.sendStatus(400); // Bad request
-
+authRouter.get("/logout/:userdir/:user", hasRedirect, async (req, res) => {
     if (req.session.user) {
-        const { provider, user } = req.session;
-        // https://expressjs.com/en/resources/middleware/session.html#unset
-        req.session = null;
-        await deleteUserAndSessions(provider, user);
+        await deleteUserAndSessions(req.session.provider, req.session.user);
     }
 
-    res.redirect(redirect);
+    req.session.provider = null;
+    req.session.user = null;
+
+    req.session.save((err) => {
+        if (err) next(err);
+
+        req.session.regenerate((err) => {
+            if (err) next(err);
+
+            res.redirect(redirect);
+        });
+    });
 });
 
 authRouter.get("/user/:userdir/:user", async (req, res) => {
@@ -51,7 +56,7 @@ authRouter.get(
         failureRedirect: `${baseUrl}/failed`,
         failureMessage: false,
     }),
-    async (req, res) => {
+    async (req, res, next) => {
         // `provider` is always set to "google".
         // https://github.com/jaredhanson/passport-google-oauth2/blob/79f9ed6/lib/strategy.js#L73
         // https://github.com/jaredhanson/passport-google-oauth2/tree/master/lib/profile
@@ -71,14 +76,22 @@ authRouter.get(
 
         if (!ticket) return res.sendStatus(401); // Unauthorized
 
-        req.session.provider = provider;
-        req.session.user = user;
-
         const redirect = req.authInfo.state.redirect;
         const url = `${redirect}${redirect.indexOf("?") > 0 ? "&" : "?"}qlikTicket=${ticket}`;
 
-        // console.log(`Redirect ${url}`);
-        res.redirect(url);
+        req.session.regenerate((err) => {
+            if (err) next(err);
+
+            req.session.provider = provider;
+            req.session.user = user;
+
+            req.session.save((err) => {
+                if (err) return next(err);
+
+                // console.log(`Redirect ${url}`);
+                res.redirect(url);
+            });
+        });
     },
 );
 
