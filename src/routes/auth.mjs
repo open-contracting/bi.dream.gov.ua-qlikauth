@@ -52,7 +52,7 @@ authRouter.get(
         // https://github.com/jaredhanson/passport-google-oauth2/blob/79f9ed6/lib/strategy.js#L73
         // https://github.com/jaredhanson/passport-google-oauth2/tree/master/lib/profile
         const { id, displayName, provider, photos } = req.user;
-        // `displayName` can contain a semi-colon.
+        // `displayName` can contain characters that need to be URL-encoded.
         // https://myaccount.google.com/profile/name/edit
         // https://developers.google.com/identity/openid-connect/openid-connect#id_token-name
         const user = `${displayName};${id}`;

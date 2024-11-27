@@ -63,7 +63,7 @@ export async function addTicket(userdir, user, attributes, targetId) {
  */
 async function makeUserRequest(userdir, user, method) {
     try {
-        const url = `${baseUrl}user/${userdir}/${user}?xrfkey=${xrfKey}`;
+        const url = `${baseUrl}user/${userdir}/${encodeURIComponent(user)}?xrfkey=${xrfKey}`;
         console.log(`${method} ${url}`);
         const response = await fetch(url, {
             dispatcher,
