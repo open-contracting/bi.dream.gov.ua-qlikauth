@@ -29,7 +29,6 @@ const dispatcher = new Agent({
  * @returns JSON data payload
  */
 export async function addTicket(userdir, user, attributes, targetId) {
-    let data;
     try {
         const payload = {
             UserDirectory: userdir,
@@ -48,11 +47,10 @@ export async function addTicket(userdir, user, attributes, targetId) {
             body: JSON.stringify(payload),
         });
 
-        data = await response.json();
+        return await response.json().Ticket;
     } catch (err) {
-        data = { Ticket: null, error: err };
+        console.error(err);
     }
-    return data;
 }
 
 /**
@@ -64,7 +62,6 @@ export async function addTicket(userdir, user, attributes, targetId) {
  * @returns JSON data payload
  */
 async function makeUserRequest(userdir, user, method) {
-    let data;
     try {
         const url = `${baseUrl}user/${userdir}/${user}?xrfkey=${xrfKey}`;
         console.log(`${method} ${url}`);
@@ -74,11 +71,10 @@ async function makeUserRequest(userdir, user, method) {
             headers: { "Content-Type": "application/json", "X-Qlik-Xrfkey": xrfKey },
         });
 
-        data = await response.json();
+        return await response.json();
     } catch (err) {
         console.error(err);
     }
-    return data;
 }
 
 export async function getUserSessions(userdir, user) {

@@ -59,18 +59,19 @@ authRouter.get(
 
         await deleteUserAndSessions(provider, user);
 
-        const ticketData = await addTicket(provider, user, [
+        // https://community.qlik.com/t5/Design/Tickets-in-Qlik-Sense/ba-p/1475770
+        const ticket = await addTicket(provider, user, [
             { photo: photos && photos.length > 0 ? photos[0].value : null },
             { userName: displayName },
         ]);
 
-        if (!ticketData || !ticketData.Ticket) return res.sendStatus(401); // Unauthorized
+        if (!ticket) return res.sendStatus(401); // Unauthorized
 
         req.session.provider = provider;
         req.session.user = user;
 
         const redirect = req.authInfo.state.redirect;
-        const url = `${redirect}${redirect.indexOf("?") > 0 ? "&" : "?"}qlikTicket=${ticketData.Ticket}`;
+        const url = `${redirect}${redirect.indexOf("?") > 0 ? "&" : "?"}qlikTicket=${ticket}`;
 
         console.log(`Redirect ${url}`);
         res.redirect(url);
