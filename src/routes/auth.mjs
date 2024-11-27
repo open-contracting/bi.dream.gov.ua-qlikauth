@@ -73,7 +73,7 @@ authRouter.get(
         const redirect = req.authInfo.state.redirect;
         const url = `${redirect}${redirect.indexOf("?") > 0 ? "&" : "?"}qlikTicket=${ticket}`;
 
-        console.log(`Redirect ${url}`);
+        // console.log(`Redirect ${url}`);
         res.redirect(url);
     },
 );

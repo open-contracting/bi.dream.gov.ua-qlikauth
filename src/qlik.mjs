@@ -39,7 +39,7 @@ export async function addTicket(userdir, user, attributes, targetId) {
 
         // https://help.qlik.com/en-US/sense-developer/May2024/Subsystems/ProxyServiceAPI/Content/Sense_ProxyServiceAPI/ProxyServiceAPI-ProxyServiceAPI-Authentication-Ticket-Add.htm
         const url = `${baseUrl}ticket?xrfkey=${xrfKey}`;
-        console.log(`POST ${url} UserDirectory=${userdir} UserId=${user} userName=${attributes[1].userName}`);
+        // console.log(`POST ${url} UserDirectory=${userdir} UserId=${user} userName=${attributes[1].userName}`);
         const response = await fetch(url, {
             dispatcher,
             method: "POST",
@@ -64,7 +64,7 @@ export async function addTicket(userdir, user, attributes, targetId) {
 async function makeUserRequest(userdir, user, method) {
     try {
         const url = `${baseUrl}user/${userdir}/${encodeURIComponent(user)}?xrfkey=${xrfKey}`;
-        console.log(`${method} ${url}`);
+        // console.log(`${method} ${url}`);
         const response = await fetch(url, {
             dispatcher,
             method,
