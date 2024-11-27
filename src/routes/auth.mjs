@@ -17,7 +17,7 @@ authRouter.get(
     hasRedirect,
     passport.authenticate("google", {
         // https://medium.com/passportjs/application-state-in-oauth-2-0-1d94379164e
-        state: { redirect: redirect },
+        state: { redirect: req.query.redirect },
         // https://developers.google.com/identity/protocols/oauth2/scopes
         scope: ["profile"],
     }),
@@ -37,7 +37,7 @@ authRouter.get("/logout/:userdir/:user", hasRedirect, async (req, res) => {
         req.session.regenerate((err) => {
             if (err) next(err);
 
-            res.redirect(redirect);
+            res.redirect(req.query.redirect);
         });
     });
 });
