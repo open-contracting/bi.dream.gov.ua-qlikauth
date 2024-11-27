@@ -34,7 +34,7 @@ async function main() {
             saveUninitialized: false,
             unset: "destroy",
             // Default is { path: '/', httpOnly: true, secure: false, maxAge: null }
-            cookie: { secure: true },
+            cookie: { secure: true, maxAge: 604800000 }, // 1 week in ms
         }),
     );
 
