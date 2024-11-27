@@ -11,12 +11,16 @@ authRouter.get("/login/google", async (req, res, next) => {
     const redirect = req.query.redirect;
     if (!redirect) return res.sendStatus(400); // Bad request
 
-    passport.authenticate("google", {
-        // https://medium.com/passportjs/application-state-in-oauth-2-0-1d94379164e
-        state: { redirect: redirect },
-        // https://developers.google.com/identity/protocols/oauth2/scopes
-        scope: ["profile"],
-    })(req, res, next);
+    req.session.regenerate((err) => {
+        if (err) next(err);
+
+        passport.authenticate("google", {
+            // https://medium.com/passportjs/application-state-in-oauth-2-0-1d94379164e
+            state: { redirect: redirect },
+            // https://developers.google.com/identity/protocols/oauth2/scopes
+            scope: ["profile"],
+        })(req, res, next);
+    });
 });
 
 authRouter.get("/logout/:userdir/:user", async (req, res) => {
