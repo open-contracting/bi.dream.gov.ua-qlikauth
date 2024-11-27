@@ -12,16 +12,14 @@ function hasRedirect(req, res, next) {
     else res.sendStatus(400); // Bad request
 }
 
-authRouter.get(
-    "/login/google",
-    hasRedirect,
+authRouter.get("/login/google", hasRedirect, async (req, res) => {
     passport.authenticate("google", {
         // https://medium.com/passportjs/application-state-in-oauth-2-0-1d94379164e
         state: { redirect: req.query.redirect },
         // https://developers.google.com/identity/protocols/oauth2/scopes
         scope: ["profile"],
-    }),
-);
+    });
+});
 
 authRouter.get("/logout/:userdir/:user", hasRedirect, async (req, res) => {
     if (req.session.user) {
