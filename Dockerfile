@@ -7,7 +7,7 @@ ENV NODE_ENV=production
 WORKDIR /workdir
 
 COPY package*.json ./
-RUN npm ci
+RUN npm ci --ignore-scripts
 
 USER runner:runner
 COPY --chown=runner:runner src src/
