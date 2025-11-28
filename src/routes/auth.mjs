@@ -114,7 +114,7 @@ export default function useAuthRouter(app) {
                 callbackURL: `${baseUrl}/google_auth_callback`,
                 store: true,
             },
-            (accessToken, refreshToken, profile, cb) => {
+            (_accessToken, _refreshToken, profile, cb) => {
                 return cb(null, profile);
             },
         ),
