@@ -6,3 +6,11 @@ updates:
       interval: "daily"
     cooldown:
       default-days: 7
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "yearly"
+    allow:
+      - dependency-name: "@biomejs/biome"
+    cooldown:
+      default-days: 7

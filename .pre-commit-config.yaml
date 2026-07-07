@@ -1,8 +1,12 @@
 ci:
   autoupdate_schedule: quarterly
+  skip: [biome-check]
 repos:
-  - repo: https://github.com/biomejs/pre-commit
-    rev: v2.4.10
+  - repo: local
     hooks:
       - id: biome-check
-        additional_dependencies: ["@biomejs/biome@2.3.8"]
+        name: biome check
+        entry: npx biome check --write --files-ignore-unknown=true --no-errors-on-unmatched
+        language: system
+        types: [text]
+        files: "\\.(jsx?|tsx?|c(js|ts)|m(js|ts)|d\\.(ts|cts|mts)|jsonc?|css|svelte|vue|astro|graphql|gql)$"
