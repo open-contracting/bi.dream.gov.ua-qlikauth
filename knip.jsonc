@@ -1,6 +1,5 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema-jsonc.json",
   "entry": ["src/server.mjs"],
-  "project": ["src/**"],
-  "ignoreDependencies": ["@biomejs/biome"]
+  "project": ["src/**"]
 }

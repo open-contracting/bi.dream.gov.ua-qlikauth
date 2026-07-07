@@ -11,7 +11,6 @@ updates:
     schedule:
       interval: "yearly"
     allow:
-      - dependency-name: "@biomejs/biome"
       - dependency-name: "knip"
     cooldown:
       default-days: 7
