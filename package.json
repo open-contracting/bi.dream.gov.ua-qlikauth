@@ -2,6 +2,10 @@
   "name": "qlikauth",
   "version": "1.0.0",
   "private": true,
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "pnpm@11.9.0",
   "dependencies": {
     "connect-redis": "^6.1.3",
     "express": "^4.22.1",
