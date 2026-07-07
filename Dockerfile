@@ -1,4 +1,4 @@
-FROM node:20
+FROM node:22
 
 RUN groupadd -r runner && useradd --no-log-init -r -g runner runner
 
