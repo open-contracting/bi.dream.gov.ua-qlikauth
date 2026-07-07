@@ -1,0 +1,7 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema-jsonc.json",
+  "entry": ["src/server.mjs"],
+  "project": ["src/**/*.mjs"],
+  // Biome is run by pre-commit and CI, not from a package.json script, so knip can't detect its use.
+  "ignoreDependencies": ["@biomejs/biome"]
+}
