@@ -7,7 +7,9 @@ updates:
     cooldown:
       default-days: 7
   - package-ecosystem: "npm"
-    directory: "/"
+    directories:
+      - "/"
+      - "**/*"
     schedule:
       interval: "yearly"
     allow:
